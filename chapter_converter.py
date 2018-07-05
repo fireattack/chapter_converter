@@ -68,14 +68,14 @@ def main():
                     chapters.append((timestamp, m.group(2)))
 
     if args.output:
-        newFilenme = args.output
+        newFilename = args.output
     elif args.format == 'pot':
-        newFilenme = f'{splitext(args.filename)[0]}.pbf'
+        newFilename = f'{splitext(args.filename)[0]}.pbf'
     else:
-        newFilenme = f'{splitext(args.filename)[0]}.{args.format}.txt'
+        newFilename = f'{splitext(args.filename)[0]}.{args.format}.txt'
 
     # Output
-    with open(newFilenme, 'w', encoding='utf-8-sig') as f:
+    with open(newFilename, 'w', encoding='utf-8-sig') as f:
         if args.format == 'simple':
             for time, title in chapters:
                 f.write(f'{time},{title}\n')
