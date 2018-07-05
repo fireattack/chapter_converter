@@ -11,8 +11,8 @@ def msToTimestamp(ms):
     return str(datetime.timedelta(seconds=ms//1000))+'.'+str(ms % 1000)
 
 
-def timestampToMs(timeStr):
-    h, m, s, ms = re.split('[:.]', timeStr)
+def timestampToMs(timestamp):
+    h, m, s, ms = re.split('[:.]', timestamp)
     return str(1000*(int(h) * 3600 + int(m) * 60 + int(s)) + int(ms))
 
 
@@ -31,7 +31,7 @@ def main():
 
     # Detect file encoding
     with open(args.filename, 'rb') as file:
-        raw = file.read()  # at most 32 bytes are returned
+        raw = file.read() 
         encoding = chardet.detect(raw)['encoding']
 
     # Detect format of input file
@@ -64,8 +64,8 @@ def main():
             for line in lines[1:]:
                 m = re.match(r'\d+=(\d+)\*([^*]+)', line.strip())
                 if m:
-                    timeStamp = msToTimestamp(m.group(1))
-                    chapters.append((timeStamp, m.group(2)))
+                    timestamp = msToTimestamp(m.group(1))
+                    chapters.append((timestamp, m.group(2)))
 
     if args.output:
         newFilenme = args.output
