@@ -21,7 +21,8 @@ optional arguments:
   -f {simple,pot,ogm}, --format {simple,pot,ogm}
                         output format (default: pot)
   -o OUTPUT, --output OUTPUT
-                        output filename
+                        output filename (default:
+                        original_filename.format[.txt])
 ```
 
 ## Supported formats
@@ -52,7 +53,7 @@ Format:
 * Odd lines: `CHAPTER{i:02}={timestamp}`
 * Even lines: `CHAPTER{i:02}NAME={tilte}`
 
-`i` starts with 1.
+`i` starts at 1.
 
 Example:
 
@@ -77,7 +78,7 @@ Format:
 * First line: `[Bookmark]`
 * Other lines: `{i}={timestamp_in_ms},{title}`
 
-`i` starts with 0.
+`i` starts at 0.
 
 Example:
 
