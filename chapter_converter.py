@@ -22,7 +22,7 @@ def main():
     parser.add_argument("filename")
     parser.add_argument("-f", "--format", default='pot', choices=['simple', 'pot', 'ogm'],
                         help="output format (default: pot)")
-    parser.add_argument("-o", "--output", help="output filename")
+    parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
     args = parser.parse_args()
 
     if not exists(args.filename):
@@ -71,6 +71,8 @@ def main():
         newFilename = args.output
     elif args.format == 'pot':
         newFilename = f'{splitext(args.filename)[0]}.pbf'
+        if newFilename == args.filename:
+            newFilename = f'{splitext(args.filename)[0]} (2).pbf'
     else:
         newFilename = f'{splitext(args.filename)[0]}.{args.format}.txt'
 
