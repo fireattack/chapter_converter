@@ -2,9 +2,21 @@ import argparse
 import datetime
 import re
 from os.path import exists, splitext
+import win32clipboard
 
 import chardet
 
+def get_clipboard_data():
+    win32clipboard.OpenClipboard()
+    data = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
+    win32clipboard.CloseClipboard()
+    return data
+
+def set_clipboard_data(data):
+    win32clipboard.OpenClipboard()
+    win32clipboard.EmptyClipboard()
+    win32clipboard.SetClipboardText(data, win32clipboard.CF_UNICODETEXT)
+    win32clipboard.CloseClipboard()
 
 def msToTimestamp(ms):
     ms = int(ms)
@@ -19,80 +31,122 @@ def timestampToMs(timestamp):
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("filename")
-    parser.add_argument("-f", "--format", default='pot', choices=['simple', 'pot', 'ogm'],
+    parser.add_argument("filename", nargs='?')
+    parser.add_argument("-f", "--format", default='pot', choices=['simple', 'pot', 'ogm', 'tab'],
                         help="output format (default: pot)")
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
+    parser.add_argument('-c', '--clipboard', action='store_true', help='Automatically process text in clipboard.')
     args = parser.parse_args()
 
-    if not exists(args.filename):
-        print('Input file missing!')
-        return 0
-
-    # Detect file encoding
-    with open(args.filename, 'rb') as file:
-        raw = file.read() 
-        encoding = chardet.detect(raw)['encoding']
-
-    # Detect format of input file
-    with open(args.filename, encoding=encoding) as f:
-        lines = f.readlines()
-        # Remove empty lines
-        lines = list(filter(lambda x: not re.match(r'^\s*$', x), lines))
-
-        SIMPLE_RE = r"(.+?), *(.+)"
-        if re.match(SIMPLE_RE, lines[0]):
-            inputFormat = 'simple'
-        if re.match(r"CHAPTER\d", lines[0]):
-            inputFormat = 'ogm'
-        if lines[0].startswith('[Bookmark]'):
-            inputFormat = 'pot'
-
-        chapters = []
-        if inputFormat == 'simple':
-            for line in lines:
-                m = re.match(SIMPLE_RE, line)
-                if m:
-                    chapters.append((m.group(1), m.group(2)))
-        if inputFormat == 'ogm':
-            for i in range(0, len(lines), 2):
-                line1 = lines[i].strip()  # Remove \n at the end
-                line2 = lines[i+1].strip()
-                chapters.append(
-                    (line1[line1.index('=')+1:], line2[line2.index('=')+1:]))
-        if inputFormat == 'pot':
-            for line in lines[1:]:
-                m = re.match(r'\d+=(\d+)\*([^*]+)', line.strip())
-                if m:
-                    timestamp = msToTimestamp(m.group(1))
-                    chapters.append((timestamp, m.group(2)))
-
-    if args.output:
-        newFilename = args.output
-    elif args.format == 'pot':
-        newFilename = f'{splitext(args.filename)[0]}.pbf'
-        if newFilename == args.filename:
-            newFilename = f'{splitext(args.filename)[0]} (2).pbf'
+    # Input handling
+    if args.clipboard:
+        f = get_clipboard_data()
+        if f:
+            print('Get data from clipboard:')
+            print(f)
+            lines = f.splitlines()
+        else:
+            print('No valid data in clipboard!')
+            return 0
     else:
-        newFilename = f'{splitext(args.filename)[0]}.{args.format}.txt'
+        if not exists(args.filename):
+            print('Input file missing!')
+            return 0
 
-    # Output
-    with open(newFilename, 'w', encoding='utf-8-sig') as f:
-        if args.format == 'simple':
-            for time, title in chapters:
-                f.write(f'{time},{title}\n')
-        if args.format == 'ogm':
-            i = 1
-            for time, title in chapters:
-                f.write(f'CHAPTER{i:02}={time}\n')
-                f.write(f'CHAPTER{i:02}NAME={title}\n')
-                i += 1
-        if args.format == 'pot':
-            i = 0
-            f.write('[Bookmark]\n')
-            for time, title in chapters:
-                f.write(f'{i}={timestampToMs(time)}*{title}*\n')
-                i += 1
+        # Detect file encoding
+        with open(args.filename, 'rb') as file:
+            raw = file.read() 
+            encoding = chardet.detect(raw)['encoding']
+
+        # Detect format of input file
+        with open(args.filename, encoding=encoding) as f:
+            lines = f.readlines()
+
+    # Remove empty lines
+    lines = list(filter(lambda x: not re.match(r'^\s*$', x), lines))
+
+    SIMPLE_RE = r"(.+?), *(.+)"
+    TAB_RE = r"(.+?)\t(.+)"
+    if re.match(SIMPLE_RE, lines[0]):
+        inputFormat = 'simple'
+    elif re.match(TAB_RE, lines[0]):
+        inputFormat = 'tab'
+    elif re.match(r"CHAPTER\d", lines[0]):
+        inputFormat = 'ogm'
+    elif lines[0].startswith('[Bookmark]'):
+        inputFormat = 'pot'
+    if not inputFormat:
+        print('Can\'t guess file format!')
+        return 0
+        
+    chapters = []
+    if inputFormat == 'simple':
+        for line in lines:
+            m = re.match(SIMPLE_RE, line)
+            if m:
+                chapters.append((m.group(1), m.group(2)))
+    elif inputFormat == 'tab':
+        for line in lines:
+            m = re.match(TAB_RE, line)
+            if m:
+                chapters.append((m.group(1), m.group(2)))
+    elif inputFormat == 'ogm':
+        for i in range(0, len(lines), 2):
+            line1 = lines[i].strip()  # Remove \n at the end
+            line2 = lines[i+1].strip()
+            chapters.append(
+                (line1[line1.index('=')+1:], line2[line2.index('=')+1:]))
+    elif inputFormat == 'pot':
+        for line in lines[1:]:
+            m = re.match(r'\d+=(\d+)\*([^*]+)', line.strip())
+            if m:
+                timestamp = msToTimestamp(m.group(1))
+                chapters.append((timestamp, m.group(2)))
+    
+    #Output filename handling
+    if not args.clipboard:
+        if args.output:
+            newFilename = args.output
+        elif args.format == 'pot':
+            newFilename = f'{splitext(args.filename)[0]}.pbf'
+            if newFilename == args.filename:
+                newFilename = f'{splitext(args.filename)[0]} (2).pbf'
+        else:
+            newFilename = f'{splitext(args.filename)[0]}.{args.format}.txt'
+    
+    if args.clipboard and inputFormat == 'ogm':
+        args.format = 'tab'
+    if args.clipboard and inputFormat == 'tab':
+        args.format = 'ogm'
+
+    output = ''
+    if args.format == 'tab':
+        for time, title in chapters:
+            output = output + f'{time}\t{title}\n'
+    elif args.format == 'simple':
+        for time, title in chapters:
+            output = output + f'{time},{title}\n'
+    elif args.format == 'ogm':
+        i = 1
+        for time, title in chapters:
+            output = output + f'CHAPTER{i:02}={time}\n'
+            output = output + f'CHAPTER{i:02}NAME={title}\n'
+            i += 1
+    elif args.format == 'pot':
+        i = 0
+        output = output + '[Bookmark]\n'
+        for time, title in chapters:
+            output = output + f'{i}={timestampToMs(time)}*{title}*\n'
+            i += 1
+
+    # Output to clipboard/file                
+    if args.clipboard:
+        set_clipboard_data(output)
+        print('Set data to clipboard:')
+        print(output)
+    else:
+        with open(newFilename, 'w', encoding='utf-8-sig') as f:
+            f.write(output)
 
 
 if __name__ == '__main__':
