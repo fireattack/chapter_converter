@@ -18,12 +18,12 @@ def set_clipboard_data(data):
     win32clipboard.SetClipboardText(data, win32clipboard.CF_UNICODETEXT)
     win32clipboard.CloseClipboard()
 
-def msToTimestamp(ms):
+def ms_to_timestamp(ms):
     ms = int(ms)
     return str(datetime.timedelta(seconds=ms//1000))+'.'+str(ms % 1000)
 
 
-def timestampToMs(timestamp):
+def timestamp_to_ms(timestamp):
     h, m, s, ms = re.split('[:.]', timestamp)
     return str(1000*(int(h) * 3600 + int(m) * 60 + int(s)) + int(ms))
 
@@ -68,55 +68,55 @@ def main():
     SIMPLE_RE = r"(.+?), *(.+)"
     TAB_RE = r"(.+?)\t(.+)"
     if re.match(SIMPLE_RE, lines[0]):
-        inputFormat = 'simple'
+        input_format = 'simple'
     elif re.match(TAB_RE, lines[0]):
-        inputFormat = 'tab'
+        input_format = 'tab'
     elif re.match(r"CHAPTER\d", lines[0]):
-        inputFormat = 'ogm'
+        input_format = 'ogm'
     elif lines[0].startswith('[Bookmark]'):
-        inputFormat = 'pot'
-    if not inputFormat:
+        input_format = 'pot'
+    if not input_format:
         print('Can\'t guess file format!')
         return 0
         
     chapters = []
-    if inputFormat == 'simple':
+    if input_format == 'simple':
         for line in lines:
             m = re.match(SIMPLE_RE, line)
             if m:
                 chapters.append((m.group(1), m.group(2)))
-    elif inputFormat == 'tab':
+    elif input_format == 'tab':
         for line in lines:
             m = re.match(TAB_RE, line)
             if m:
                 chapters.append((m.group(1), m.group(2)))
-    elif inputFormat == 'ogm':
+    elif input_format == 'ogm':
         for i in range(0, len(lines), 2):
             line1 = lines[i].strip()  # Remove \n at the end
             line2 = lines[i+1].strip()
             chapters.append(
                 (line1[line1.index('=')+1:], line2[line2.index('=')+1:]))
-    elif inputFormat == 'pot':
+    elif input_format == 'pot':
         for line in lines[1:]:
             m = re.match(r'\d+=(\d+)\*([^*]+)', line.strip())
             if m:
-                timestamp = msToTimestamp(m.group(1))
+                timestamp = ms_to_timestamp(m.group(1))
                 chapters.append((timestamp, m.group(2)))
     
     #Output filename handling
     if not args.clipboard:
         if args.output:
-            newFilename = args.output
+            new_filename = args.output
         elif args.format == 'pot':
-            newFilename = f'{splitext(args.filename)[0]}.pbf'
-            if newFilename == args.filename:
-                newFilename = f'{splitext(args.filename)[0]} (2).pbf'
+            new_filename = f'{splitext(args.filename)[0]}.pbf'
+            if new_filename == args.filename:
+                new_filename = f'{splitext(args.filename)[0]} (2).pbf'
         else:
-            newFilename = f'{splitext(args.filename)[0]}.{args.format}.txt'
+            new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
     
-    if args.clipboard and inputFormat == 'ogm':
+    if args.clipboard and input_format == 'ogm':
         args.format = 'tab'
-    if args.clipboard and inputFormat == 'tab':
+    if args.clipboard and input_format == 'tab':
         args.format = 'ogm'
 
     output = ''
@@ -136,7 +136,7 @@ def main():
         i = 0
         output = output + '[Bookmark]\n'
         for time, title in chapters:
-            output = output + f'{i}={timestampToMs(time)}*{title}*\n'
+            output = output + f'{i}={timestamp_to_ms(time)}*{title}*\n'
             i += 1
 
     # Output to clipboard/file                
@@ -145,7 +145,7 @@ def main():
         print('Set data to clipboard:')
         print(output)
     else:
-        with open(newFilename, 'w', encoding='utf-8-sig') as f:
+        with open(new_filename, 'w', encoding='utf-8-sig') as f:
             f.write(output)
 
 
