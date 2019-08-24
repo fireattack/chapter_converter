@@ -49,7 +49,7 @@ def main():
             print('No valid data in clipboard!')
             return 0
     else:
-        if not exists(args.filename):
+        if not args.filename or not exists(args.filename):
             print('Input file missing!')
             return 0
 
