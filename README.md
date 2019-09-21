@@ -3,26 +3,29 @@ Convert between three different video chapter file formats with ease.
 
 ## Features
 
+* Auto input format detection (including .mkv and .mp4 files. Requires `mkvtoolnix` binaries in path.)
 * Auto input encoding detection
-* Auto input format detection
 * Can specify output format and filename
+* Clipboard quick OGM <--> Tab-separated for editing purposes
 * Output saved as UTF-8-BOM
 
 ## Usage
 
 ```
-usage: chapter_converter.py [-h] [-f {simple,pot,ogm}] [-o OUTPUT] filename
+usage: chapter_converter.py [-h] [-f {simple,pot,ogm,tab}] [-o OUTPUT] [-c]
+                            [filename]
 
 positional arguments:
   filename
 
 optional arguments:
   -h, --help            show this help message and exit
-  -f {simple,pot,ogm}, --format {simple,pot,ogm}
+  -f {simple,pot,ogm,tab}, --format {simple,pot,ogm,tab}
                         output format (default: pot)
   -o OUTPUT, --output OUTPUT
                         output filename (default:
                         original_filename.format[.txt])
+  -c, --clipboard       Automatically process text in clipboard.
 ```
 
 ## Supported formats
@@ -42,6 +45,22 @@ Example:
 0:17:02.148,Title1
 0:42:19.976,Title2
 0:58:10.114,Title3
+...
+```
+
+### Tab format (`tab`)
+
+Separated by tab
+
+Format: 
+* Each line: `{timestamp}	{title}`
+
+Example: 
+
+```
+0:17:02.148	Title1
+0:42:19.976	Title2
+0:58:10.114	Title3
 ...
 ```
 
