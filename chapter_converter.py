@@ -43,7 +43,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs='?')
-    parser.add_argument("-f", "--format", default='pot', choices=['simple', 'pot', 'ogm', 'tab'],
+    parser.add_argument("-f", "--format", default='pot', choices=['simple', 'pot', 'ogm', 'tab','xml'],
                         help="output format (default: pot)")
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
     parser.add_argument('-c', '--clipboard', action='store_true', help='Automatically process text in clipboard.')
@@ -127,6 +127,8 @@ def main():
             new_filename = f'{splitext(args.filename)[0]}.pbf'
             if new_filename == args.filename:
                 new_filename = f'{splitext(args.filename)[0]} (2).pbf'
+        elif args.format == 'xml':
+            new_filename = f'{splitext(args.filename)[0]}.xml'
         else:
             new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
     
@@ -142,7 +144,7 @@ def main():
     elif args.format == 'simple':
         for time, title in chapters:
             output = output + f'{time},{title}\n'
-    elif args.format == 'ogm':
+    elif args.format in ['ogm','xml']:
         i = 1
         for time, title in chapters:
             output = output + f'CHAPTER{i:02}={time}\n'
@@ -160,6 +162,13 @@ def main():
         set_clipboard_data(output)
         print('Set data to clipboard:')
         print(output)
+    elif args.format == 'xml':
+        with open('temp.ogm.txt', 'w', encoding='utf-8-sig') as f:
+            f.write(output)
+        run(['mkvmerge', '-o', 'temp.mks', '--chapters', 'temp.ogm.txt'])
+        run(['mkvextract', 'temp.mks', 'chapters', new_filename])
+        remove('temp.mks')
+        remove('temp.ogm.txt')
     else:
         with open(new_filename, 'w', encoding='utf-8-sig') as f:
             f.write(output)
