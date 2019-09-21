@@ -12,7 +12,8 @@ Convert between three different video chapter file formats with ease.
 ## Usage
 
 ```
-usage: chapter_converter.py [-h] [-f {simple,pot,ogm,tab}] [-o OUTPUT] [-c]
+usage: chapter_converter.py [-h] [-f {simple,pot,ogm,tab,xml}] [-o OUTPUT]
+                            [-c]
                             [filename]
 
 positional arguments:
@@ -20,7 +21,7 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -f {simple,pot,ogm,tab}, --format {simple,pot,ogm,tab}
+  -f {simple,pot,ogm,tab,xml}, --format {simple,pot,ogm,tab,xml}
                         output format (default: pot)
   -o OUTPUT, --output OUTPUT
                         output filename (default:
@@ -31,6 +32,10 @@ optional arguments:
 ## Supported formats
 
 See also: example files in `examples`.
+
+### MKV and MP4 video containers (inputs only)
+
+Guessed by suffix. Not idiot-proof, please only feed in file with chapters.
 
 ### Simple format (`simple`)
 
@@ -84,6 +89,11 @@ CHAPTER02NAME=Title2
 CHAPTER03=0:58:10.114
 ...
 ```
+
+### XML format ('xml')
+
+XML chapter format defined by [Matroska specification](https://matroska.org/technical/specs/chapters/index.html).
+
 ###  [PotPlayer](https://potplayer.daum.net/) Bookmark format (.pbf) (`pot`)
 
 A format PotPlayer uses for its bookmarks. If you put the file together with the video file (same name except extension, just like any external resources), it will be recognized by PotPlayer just like internal chapters - you can use "H" to view and select, and they will show up as markers on navigation bar too:
