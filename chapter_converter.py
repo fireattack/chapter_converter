@@ -1,7 +1,9 @@
+from subprocess import run
 import argparse
 import datetime
 import re
 from os.path import exists, splitext
+from os import remove
 import win32clipboard
 
 import chardet
@@ -27,6 +29,15 @@ def timestamp_to_ms(timestamp):
     h, m, s, ms = re.split('[:.]', timestamp)
     return str(1000*(int(h) * 3600 + int(m) * 60 + int(s)) + int(ms))
 
+def load_file_content(filename):
+        # Detect file encoding
+        with open(filename, 'rb') as file:
+            raw = file.read() 
+            encoding = chardet.detect(raw)['encoding']
+
+        # Detect format of input file
+        with open(filename, encoding=encoding) as f:
+            return f.readlines()
 
 def main():
 
@@ -52,15 +63,20 @@ def main():
         if not args.filename or not exists(args.filename):
             print('Input file missing!')
             return 0
-
-        # Detect file encoding
-        with open(args.filename, 'rb') as file:
-            raw = file.read() 
-            encoding = chardet.detect(raw)['encoding']
-
-        # Detect format of input file
-        with open(args.filename, encoding=encoding) as f:
-            lines = f.readlines()
+        if args.filename.lower().endswith('.xml'):
+            run(['mkvmerge', '-o', 'temp.mks', '--chapters', args.filename])
+            run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
+            lines = load_file_content('temp.ogm.txt')
+            remove('temp.mks')
+            remove('temp.ogm.txt')
+        elif args.filename.lower().split('.')[-1] in ['mp4','mkv']:
+            run(['mkvmerge', '-o', 'temp.mks', '-A', '-D', args.filename])
+            run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
+            lines = load_file_content('temp.ogm.txt')
+            remove('temp.mks')
+            remove('temp.ogm.txt')
+        else:
+            lines = load_file_content(args.filename)
 
     # Remove empty lines
     lines = list(filter(lambda x: not re.match(r'^\s*$', x), lines))
