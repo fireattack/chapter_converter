@@ -105,7 +105,7 @@ It is not ideal, but it's the closest thing to "external chapter file" to my kno
 Format: 
 
 * First line: `[Bookmark]`
-* Other lines: `{i}={timestamp_in_ms},{title}`
+* Other lines: `{i}={timestamp_in_ms}*{title}*{some_optional_hash_for_pot_internal_usage}`
 
 `i` starts at 0.
 
