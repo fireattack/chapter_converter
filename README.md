@@ -95,7 +95,7 @@ CHAPTER03=0:58:10.114
 ...
 ```
 
-### XML format ('xml')
+### XML format (`xml`)
 
 XML chapter format defined by [Matroska specification](https://matroska.org/technical/specs/chapters/index.html).
 
