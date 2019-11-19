@@ -3,11 +3,10 @@ Convert between three different video chapter file formats with ease.
 
 ## Features
 
-* Auto input format detection (including .mkv and .mp4 files. Requires `mkvtoolnix` binaries in path.)
+* Auto input format detection: including chapter files and video files with chapters (`.mkv` and `.mp4`. Requires `mkvtoolnix` binaries in path).
 * Auto input encoding detection
 * Can specify output format and filename
-* Clipboard quick OGM <--> Tab-separated for editing purposes
-* Output saved as UTF-8-BOM
+* Clipboard support (input and output) for editing purposes
 
 ## Usage
 
@@ -26,8 +25,14 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
                         output filename (default:
                         original_filename.format[.txt])
-  -c, --clipboard       Automatically process text in clipboard.
+  -c, --clipboard       automatically process text in clipboard and save it
+                        back.
 ```
+### Note
+
+* Output saved as UTF-8-BOM for max compatibility on Windows
+* When `-c` is used, you can still pass in a file as input instead.
+* When `-c` is used, you can still pass in a output filename (using `-f`) as output instead.
 
 ## Supported formats
 

@@ -43,26 +43,14 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs='?')
-    parser.add_argument("-f", "--format", default='pot', choices=['simple', 'pot', 'ogm', 'tab','xml'],
+    parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab','xml'],
                         help="output format (default: pot)")
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
-    parser.add_argument('-c', '--clipboard', action='store_true', help='Automatically process text in clipboard.')
+    parser.add_argument('-c', '--clipboard', action='store_true', help='automatically process text in clipboard and save it back.')
     args = parser.parse_args()
 
     # Input handling
-    if args.clipboard:
-        f = get_clipboard_data()
-        if f:
-            print('Get data from clipboard:')
-            print(f)
-            lines = f.splitlines()
-        else:
-            print('No valid data in clipboard!')
-            return 0
-    else:
-        if not args.filename or not exists(args.filename):
-            print('Input file missing!')
-            return 0
+    if args.filename and exists(args.filename):
         if args.filename.lower().endswith('.xml'):
             run(['mkvmerge', '-o', 'temp.mks', '--chapters', args.filename])
             run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
@@ -77,10 +65,22 @@ def main():
             remove('temp.ogm.txt')
         else:
             lines = load_file_content(args.filename)
+    elif args.clipboard:
+        f = get_clipboard_data()
+        if f:
+            print('Get data from clipboard:')
+            print(f)
+            lines = f.splitlines()
+        else:
+            print('No valid input data in clipboard!')
+            return 0
+    else:
+        print('Input file missing or invalid!')                
+        return 0
 
     # Remove empty lines
     lines = list(filter(lambda x: not re.match(r'^\s*$', x), lines))
-
+    input_format = ''
     SIMPLE_RE = r"(.+?), *(.+)"
     TAB_RE = r"(.+?)\t(.+)"
     if re.match(SIMPLE_RE, lines[0]):
@@ -118,24 +118,33 @@ def main():
             if m:
                 timestamp = ms_to_timestamp(m.group(1))
                 chapters.append((timestamp, m.group(2)))
+
+    # Set default output format. I didn't use parser default option anymroe because I want to distinguish between no argument vs "pot".
+    if not args.format:
+        if args.clipboard and input_format != 'tab':
+            args.format = 'tab'
+        else:
+            args.format = 'pot'    
     
     #Output filename handling
-    if not args.clipboard:
-        if args.output:
-            new_filename = args.output
-        elif args.format == 'pot':
+    if args.output:
+        new_filename = args.output
+        args.clipboard = False
+    elif not args.clipboard:
+        if args.format == 'pot':
             new_filename = f'{splitext(args.filename)[0]}.pbf'
-            if new_filename == args.filename:
-                new_filename = f'{splitext(args.filename)[0]} (2).pbf'
         elif args.format == 'xml':
             new_filename = f'{splitext(args.filename)[0]}.xml'
         else:
             new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
     
-    if args.clipboard and input_format == 'ogm':
-        args.format = 'tab'
-    if args.clipboard and input_format == 'tab':
-        args.format = 'ogm'
+    #Ensure to not override existing file(s)
+    i = 2
+    stem = splitext(new_filename)[0]
+    ext = splitext(new_filename)[1]
+    while exists(new_filename):
+        new_filename = f'{stem} ({i}){ext}'
+        i += 1
 
     output = ''
     if args.format == 'tab':
@@ -158,10 +167,10 @@ def main():
             i += 1
 
     # Output to clipboard/file                
-    if args.clipboard:
-        set_clipboard_data(output)
+    if args.clipboard:        
         print('Set data to clipboard:')
         print(output)
+        set_clipboard_data(output.replace('\n','\r\n'))
     elif args.format == 'xml':
         with open('temp.ogm.txt', 'w', encoding='utf-8-sig') as f:
             f.write(output)
