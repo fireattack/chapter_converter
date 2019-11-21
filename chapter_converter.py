@@ -127,24 +127,26 @@ def main():
             args.format = 'pot'    
     
     #Output filename handling
-    if args.output:
-        new_filename = args.output
-        args.clipboard = False
-    elif not args.clipboard:
-        if args.format == 'pot':
-            new_filename = f'{splitext(args.filename)[0]}.pbf'
-        elif args.format == 'xml':
-            new_filename = f'{splitext(args.filename)[0]}.xml'
+    if args.clipboard and not args.output:
+        pass
+    else:
+        if args.output:
+            new_filename = args.output
+            args.clipboard = False
         else:
-            new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
-    
-    #Ensure to not override existing file(s)
-    i = 2
-    stem = splitext(new_filename)[0]
-    ext = splitext(new_filename)[1]
-    while exists(new_filename):
-        new_filename = f'{stem} ({i}){ext}'
-        i += 1
+            if args.format == 'pot':
+                new_filename = f'{splitext(args.filename)[0]}.pbf'
+            elif args.format == 'xml':
+                new_filename = f'{splitext(args.filename)[0]}.xml'
+            else:
+                new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'    
+        #Ensure to not override existing file(s) 
+        i = 2
+        stem = splitext(new_filename)[0]
+        ext = splitext(new_filename)[1]
+        while exists(new_filename):
+            new_filename = f'{stem} ({i}){ext}'
+            i += 1
 
     output = ''
     if args.format == 'tab':
