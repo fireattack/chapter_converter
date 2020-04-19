@@ -94,7 +94,8 @@ def main():
     if not input_format:
         print('Can\'t guess file format!')
         return 0
-        
+    
+    # Input text parsing
     chapters = []
     if input_format == 'simple':
         for line in lines:
@@ -119,14 +120,21 @@ def main():
                 timestamp = ms_to_timestamp(m.group(1))
                 chapters.append((timestamp, m.group(2)))
 
-    # Set default output format. I didn't use parser default option anymroe because I want to distinguish between no argument vs "pot".
+    # Set default output format if not specified. 
     if not args.format:
-        if args.clipboard and input_format != 'tab':
-            args.format = 'tab'
-        else:
-            args.format = 'pot'    
-    
-    #Output filename handling
+        args.format = 'pot' # Default to pot
+        if args.clipboard and input_format != 'tab': 
+            args.format = 'tab' # Default to "tab" if get from clipboard for spreadsheet editing.
+        if args.output: # Get output format from output filename, if speicified. 
+            ext = splitext(args.output)[-1]
+            if ext.lower == '.pbf':
+                args.format = 'pot'
+            elif ext.lower == '.xml':
+                args.format = 'xml'
+            elif ext.lower == '.txt':
+                args.format == 'ogm'
+
+    # Output filename handling
     if args.clipboard and not args.output:
         pass
     else:
@@ -140,7 +148,7 @@ def main():
                 new_filename = f'{splitext(args.filename)[0]}.xml'
             else:
                 new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'    
-        #Ensure to not override existing file(s) 
+        # Ensure to not override existing file(s) 
         i = 2
         stem = splitext(new_filename)[0]
         ext = splitext(new_filename)[1]
@@ -148,6 +156,7 @@ def main():
             new_filename = f'{stem} ({i}){ext}'
             i += 1
 
+    # Genreate output text
     output = ''
     if args.format == 'tab':
         for time, title in chapters:
@@ -168,7 +177,7 @@ def main():
             output = output + f'{i}={timestamp_to_ms(time)}*{title}*\n'
             i += 1
 
-    # Output to clipboard/file                
+    # Output to clipboard/file
     if args.clipboard:        
         print('Set data to clipboard:')
         print(output)
