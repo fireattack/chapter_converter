@@ -81,8 +81,8 @@ def main():
     # Remove empty lines
     lines = list(filter(lambda x: not re.match(r'^\s*$', x), lines))
     input_format = ''
-    SIMPLE_RE = r"(.+?), *(.+)"
-    TAB_RE = r"(.+?)\t(.+)"
+    SIMPLE_RE = r"([0-9:.]+?), *(.+)"
+    TAB_RE = r"([0-9:.].+?)\t(.+)"
     if re.match(SIMPLE_RE, lines[0]):
         input_format = 'simple'
     elif re.match(TAB_RE, lines[0]):
@@ -127,11 +127,11 @@ def main():
             args.format = 'tab' # Default to "tab" if get from clipboard for spreadsheet editing.
         if args.output: # Get output format from output filename, if speicified. 
             ext = splitext(args.output)[-1]
-            if ext.lower == '.pbf':
+            if ext.lower() == '.pbf':
                 args.format = 'pot'
-            elif ext.lower == '.xml':
+            elif ext.lower() == '.xml':
                 args.format = 'xml'
-            elif ext.lower == '.txt':
+            elif ext.lower() == '.txt':
                 args.format == 'ogm'
 
     # Output filename handling
