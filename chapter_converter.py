@@ -132,7 +132,7 @@ def main():
             elif ext.lower() == '.xml':
                 args.format = 'xml'
             elif ext.lower() == '.txt':
-                args.format == 'ogm'
+                args.format = 'ogm'
 
     # Output filename handling
     if args.clipboard and not args.output:
