@@ -42,9 +42,10 @@ def load_file_content(filename):
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("filename", nargs='?')
-    parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab','xml'],
-                        help="output format (default: pot)")
+    parser.add_argument("filename", nargs='?', help="input filename")
+    parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab','xml'], help="output format (default: pot)")
+    parser.add_argument("--mp4-charset", help="input chapter charset for mp4 file, since it can't be auto detected (default: utf-8)", default='utf-8')
+    parser.add_argument("--charset", help="output file charset (default: utf-8-sig)", default='utf-8-sig')
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
     parser.add_argument('-c', '--clipboard', action='store_true', help='automatically process text in clipboard and save it back.')
     args = parser.parse_args()
@@ -58,7 +59,7 @@ def main():
             remove('temp.mks')
             remove('temp.ogm.txt')
         elif args.filename.lower().split('.')[-1] in ['mp4','mkv']:
-            run(['mkvmerge', '-o', 'temp.mks', '-A', '-D', args.filename])
+            run(['mkvmerge', '-o', 'temp.mks', '-A', '-D', '--chapter-charset', args.mp4_charset, args.filename])
             run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
             lines = load_file_content('temp.ogm.txt')
             remove('temp.mks')
@@ -183,14 +184,14 @@ def main():
         print(output)
         set_clipboard_data(output.replace('\n','\r\n'))
     elif args.format == 'xml':
-        with open('temp.ogm.txt', 'w', encoding='utf-8-sig') as f:
+        with open('temp.ogm.txt', 'w', encoding=args.charset) as f:
             f.write(output)
         run(['mkvmerge', '-o', 'temp.mks', '--chapters', 'temp.ogm.txt'])
         run(['mkvextract', 'temp.mks', 'chapters', new_filename])
         remove('temp.mks')
         remove('temp.ogm.txt')
     else:
-        with open(new_filename, 'w', encoding='utf-8-sig') as f:
+        with open(new_filename, 'w', encoding=args.charset) as f:
             f.write(output)
 
 

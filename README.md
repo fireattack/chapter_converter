@@ -11,28 +11,27 @@ Convert between three different video chapter file formats with ease.
 ## Usage
 
 ```
-usage: chapter_converter.py [-h] [-f {simple,pot,ogm,tab,xml}] [-o OUTPUT]
-                            [-c]
-                            [filename]
+usage: chapter_converter.py [-h] [-f {simple,pot,ogm,tab,xml}] [--mp4-charset MP4_CHARSET] [--charset CHARSET] [-o OUTPUT] [-c] [filename]
 
 positional arguments:
-  filename
+  filename              input filename
 
 optional arguments:
   -h, --help            show this help message and exit
   -f {simple,pot,ogm,tab,xml}, --format {simple,pot,ogm,tab,xml}
                         output format (default: pot)
+  --mp4-charset MP4_CHARSET
+                        input chapter charset for mp4 file, since it can't be auto detected (default: utf-8)
+  --charset CHARSET     output file charset (default: utf-8-sig)
   -o OUTPUT, --output OUTPUT
-                        output filename (default:
-                        original_filename.format[.txt])
-  -c, --clipboard       automatically process text in clipboard and save it
-                        back.
+                        output filename (default: original_filename.format[.txt])
+  -c, --clipboard       automatically process text in clipboard and save it back.
 ```
 ### Note
 
-* Output saved as UTF-8-BOM for max compatibility on Windows
+* Output by default saved as UTF-8-BOM for max compatibility on Windows. You can change it by passing in `--charset` argument.
 * When `-c` is used, you can still pass in a file as input instead.
-* When `-c` is used, you can still pass in a output filename (using `-f`) as output instead.
+* When `-c` is used, you can still pass in an output filename (using `-f`) as output instead.
 
 ## Supported formats
 
