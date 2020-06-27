@@ -31,7 +31,7 @@ optional arguments:
 
 * Output by default saved as UTF-8-BOM for max compatibility on Windows. You can change it by passing in `--charset` argument.
 * When `-c` is used, you can still pass in a file as input instead.
-* When `-c` is used, you can still pass in an output filename (using `-f`) as output instead.
+* When `-c` is used, you can still pass in an output filename (using `-o` and `-f`) as output instead.
 
 ## Supported formats
 
