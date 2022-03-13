@@ -22,7 +22,7 @@ def set_clipboard_data(data):
 
 def ms_to_timestamp(ms):
     ms = int(ms)
-    return str(datetime.timedelta(seconds=ms//1000))+'.'+str(ms % 1000)
+    return str(datetime.timedelta(seconds=ms//1000))+'.'+str(ms % 1000).zfill(3)
 
 
 def timestamp_to_ms(timestamp):
@@ -32,14 +32,14 @@ def timestamp_to_ms(timestamp):
 def load_file_content(filename):
         # Detect file encoding
         with open(filename, 'rb') as file:
-            raw = file.read() 
+            raw = file.read()
             encoding = chardet.detect(raw)['encoding']
 
         # Detect format of input file
         with open(filename, encoding=encoding) as f:
             return f.readlines()
 
-def main():
+def main(*paras):
 
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs='?', help="input filename")
@@ -48,7 +48,11 @@ def main():
     parser.add_argument("--charset", help="output file charset (default: utf-8-sig)", default='utf-8-sig')
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
     parser.add_argument('-c', '--clipboard', action='store_true', help='automatically process text in clipboard and save it back.')
-    args = parser.parse_args()
+    if paras:
+        paras = list(map(str, paras))
+        args = parser.parse_args(paras)
+    else:
+        args = parser.parse_args()
 
     # Input handling
     if args.filename and exists(args.filename):
@@ -76,7 +80,7 @@ def main():
             print('No valid input data in clipboard!')
             return 0
     else:
-        print('Input file missing or invalid!')                
+        print('Input file missing or invalid!')
         return 0
 
     # Remove empty lines
@@ -95,7 +99,7 @@ def main():
     if not input_format:
         print('Can\'t guess file format!')
         return 0
-    
+
     # Input text parsing
     chapters = []
     if input_format == 'simple':
@@ -121,12 +125,12 @@ def main():
                 timestamp = ms_to_timestamp(m.group(1))
                 chapters.append((timestamp, m.group(2)))
 
-    # Set default output format if not specified. 
+    # Set default output format if not specified.
     if not args.format:
         args.format = 'pot' # Default to pot
-        if args.clipboard and input_format != 'tab': 
+        if args.clipboard and input_format != 'tab':
             args.format = 'tab' # Default to "tab" if get from clipboard for spreadsheet editing.
-        if args.output: # Get output format from output filename, if speicified. 
+        if args.output: # Get output format from output filename, if speicified.
             ext = splitext(args.output)[-1]
             if ext.lower() == '.pbf':
                 args.format = 'pot'
@@ -148,8 +152,8 @@ def main():
             elif args.format == 'xml':
                 new_filename = f'{splitext(args.filename)[0]}.xml'
             else:
-                new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'    
-        # Ensure to not override existing file(s) 
+                new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
+        # Ensure to not override existing file(s)
         i = 2
         stem = splitext(new_filename)[0]
         ext = splitext(new_filename)[1]
@@ -179,7 +183,7 @@ def main():
             i += 1
 
     # Output to clipboard/file
-    if args.clipboard:        
+    if args.clipboard:
         print('Set data to clipboard:')
         print(output)
         set_clipboard_data(output.replace('\n','\r\n'))

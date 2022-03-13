@@ -27,6 +27,15 @@ optional arguments:
                         output filename (default: original_filename.format[.txt])
   -c, --clipboard       automatically process text in clipboard and save it back.
 ```
+
+As a Python module:
+
+```python
+from chapter_converter import main
+
+main(['input.pbf', '-o', 'output.xml'])
+```
+
 ### Note
 
 * Output by default saved as UTF-8-BOM for max compatibility on Windows. You can change it by passing in `--charset` argument.
@@ -45,10 +54,10 @@ Guessed by suffix. Not idiot-proof, please only feed in file with chapters.
 
 I made it up.
 
-Format: 
+Format:
 * Each line: `{timestamp},{title}`
 
-Example: 
+Example:
 
 ```
 0:17:02.148,Title1
@@ -61,10 +70,10 @@ Example:
 
 Separated by tab
 
-Format: 
+Format:
 * Each line: `{timestamp}	{title}`
 
-Example: 
+Example:
 
 ```
 0:17:02.148	Title1
@@ -75,9 +84,9 @@ Example:
 
 ### OGM format (`ogm`)
 
-Can be recognized by common video tools, such as [MKVToolNix](https://mkvtoolnix.download/). 
+Can be recognized by common video tools, such as [MKVToolNix](https://mkvtoolnix.download/).
 
-Format: 
+Format:
 * Odd lines: `CHAPTER{i:02}={timestamp}`
 * Even lines: `CHAPTER{i:02}NAME={tilte}`
 
@@ -104,9 +113,9 @@ A format PotPlayer uses for its bookmarks. If you put the file together with the
 
 ![Pot Bookmark Example](img/pot.png)
 
-It is not ideal, but it's the closest thing to "external chapter file" to my knowledge. 
+It is not ideal, but it's the closest thing to "external chapter file" to my knowledge.
 
-Format: 
+Format:
 
 * First line: `[Bookmark]`
 * Other lines: `{i}={timestamp_in_ms}*{title}*{some_optional_hash_for_pot_internal_usage}`
