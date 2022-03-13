@@ -33,7 +33,7 @@ As a Python module:
 ```python
 from chapter_converter import main
 
-main(['input.pbf', '-o', 'output.xml'])
+main('input.pbf', '-o', 'output.xml')
 ```
 
 ### Note
