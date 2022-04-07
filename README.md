@@ -103,6 +103,24 @@ CHAPTER03=0:58:10.114
 ...
 ```
 
+### MediaInfo format (`mediainfo`)
+
+The way [MediaInfo](https://mediaarea.net/en/MediaInfo) presents chapter information in text form. Input only. Supports both with or without the "Menu" line.
+
+Format:
+* Each line: `{timestamp}\s+: ({two_letter_lang_code})?:{title}`
+
+Example:
+
+```
+Menu
+00:00:00.000                : en:Contours
+00:02:49.624                : en:From the Sea
+00:08:41.374                : en:Bread and Wine
+00:12:18.041                : en:Faceless
+...
+```
+
 ### XML format (`xml`)
 
 XML chapter format defined by [Matroska specification](https://matroska.org/technical/specs/chapters/index.html).

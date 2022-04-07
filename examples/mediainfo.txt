@@ -1,0 +1,21 @@
+Menu
+00:00:00.000                : en:Contours
+00:02:49.624                : en:From the Sea
+00:08:41.374                : en:Bread and Wine
+00:12:18.041                : en:Faceless
+00:14:40.582                : en:A Marriage Refused
+00:18:39.916                : en:The Cliffs
+00:22:45.832                : en:Sketches
+00:28:17.124                : en:Not Sadness But Anger
+00:34:45.166                : en:Playing Vivaldi
+00:42:36.874                : en:The Portrait, Destroyed
+00:55:06.082                : en:Monthlies
+01:03:34.874                : en:The Observer, the Observed
+01:09:48.124                : en:The Poet's Choice
+01:14:27.041                : en:On Fire
+01:24:24.082                : en:Sophie
+01:30:16.874                : en:"Do Not Imagine Me Guilty"
+01:40:21.999                : en:Page 28
+01:47:03.791                : en:"Turn Around"
+01:51:34.582                : en:The Symphony
+01:58:20.499                : en:End Credits
