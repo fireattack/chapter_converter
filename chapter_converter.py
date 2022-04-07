@@ -88,6 +88,7 @@ def main(*paras):
     input_format = ''
     SIMPLE_RE = r"([0-9:.]+?), *(.+)"
     TAB_RE = r"([0-9:.].+?)\t(.+)"
+    MEDIAINFO_RE = r"([0-9:.]+?)\s+:\s[a-z]{0,2}:(.+)"
     if re.match(SIMPLE_RE, lines[0]):
         input_format = 'simple'
     elif re.match(TAB_RE, lines[0]):
@@ -96,6 +97,12 @@ def main(*paras):
         input_format = 'ogm'
     elif lines[0].startswith('[Bookmark]'):
         input_format = 'pot'
+    elif lines[0].startswith('Menu'):
+        if re.match(MEDIAINFO_RE, lines[1]):
+            lines = lines[1:]
+            input_format = 'mediainfo'
+    elif re.match(MEDIAINFO_RE, lines[0]):
+        input_format = 'mediainfo'
     if not input_format:
         print('Can\'t guess file format!')
         return 0
@@ -124,6 +131,11 @@ def main(*paras):
             if m:
                 timestamp = ms_to_timestamp(m.group(1))
                 chapters.append((timestamp, m.group(2)))
+    elif input_format == 'mediainfo':
+        for line in lines:
+            m = re.match(MEDIAINFO_RE, line)
+            if m:
+                chapters.append((m.group(1), m.group(2)))
 
     # Set default output format if not specified.
     if not args.format:

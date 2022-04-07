@@ -105,4 +105,4 @@ venv.bak/
 /old
 .vscode/*
 /img/pot.psd
-/test.py
+/test*
