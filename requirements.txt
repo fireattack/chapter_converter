@@ -1,2 +1,3 @@
 chardet
+Gooey
 pywin32
