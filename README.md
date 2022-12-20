@@ -1,5 +1,5 @@
 # chapter_converter
-Convert between three different video chapter file formats with ease.
+Convert between several different video chapter file formats with ease.
 
 ## Features
 
@@ -28,6 +28,8 @@ optional arguments:
   -c, --clipboard       automatically process text in clipboard and save it back.
 ```
 
+Note: A simple GUI is provided by running `gui.py`. You need to install module `gooey` in `pip` separately to make it work. See https://github.com/fireattack/chapter_converter/pull/4#issuecomment-1359129224 for some caveats.
+
 As a Python module:
 
 ```python
@@ -40,7 +42,7 @@ main('input.pbf', '-o', 'output.xml')
 
 * Output by default saved as UTF-8-BOM for max compatibility on Windows. You can change it by passing in `--charset` argument.
 * When `-c` is used, you can still pass in a file as input instead.
-* When `-c` is used, you can still pass in an output filename (using `-o` and `-f`) as output instead.
+* When `-c` is used, you can still pass in an output filename (using `-o` and/or `-f`) as output instead.
 
 ## Supported formats
 
@@ -68,7 +70,7 @@ Example:
 
 ### Tab format (`tab`)
 
-Separated by tab
+Similar to Simple, but separated by tab instead of comma.
 
 Format:
 * Each line: `{timestamp}	{title}`

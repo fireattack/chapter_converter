@@ -1,3 +1,7 @@
 chardet
-Gooey
 pywin32
+
+# If you want to use GUI, install:
+# attrdict3
+# Gooey
+# in two separate transctions with PIP.
