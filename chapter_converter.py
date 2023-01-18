@@ -25,8 +25,14 @@ def ms_to_timestamp(ms):
     return str(datetime.timedelta(seconds=ms//1000))+'.'+str(ms % 1000).zfill(3)
 
 
-def timestamp_to_ms(timestamp):
+def timestamp_to_ms(timestamp : str):
+    '''acceptable timestamp format: [00:]00:00[.000]'''
+    if timestamp.count(':') == 1:
+        timestamp = f'00:{timestamp}'
+    if '.' not in timestamp:
+        timestamp += '.000'
     h, m, s, ms = re.split('[:.]', timestamp)
+    ms = ms.ljust(3, '0')[:3]
     return str(1000*(int(h) * 3600 + int(m) * 60 + int(s)) + int(ms))
 
 def load_file_content(filename):
