@@ -4,9 +4,9 @@ import datetime
 import re
 from os.path import exists, splitext
 from os import remove
-import win32clipboard
 
 import chardet
+import win32clipboard
 
 def get_clipboard_data():
     win32clipboard.OpenClipboard()
@@ -14,18 +14,18 @@ def get_clipboard_data():
     win32clipboard.CloseClipboard()
     return data
 
-def set_clipboard_data(data):
+def set_clipboard_data(data: str):
     win32clipboard.OpenClipboard()
     win32clipboard.EmptyClipboard()
     win32clipboard.SetClipboardText(data, win32clipboard.CF_UNICODETEXT)
     win32clipboard.CloseClipboard()
 
-def ms_to_timestamp(ms):
-    ms = int(ms)
-    return str(datetime.timedelta(seconds=ms//1000))+'.'+str(ms % 1000).zfill(3)
+def ms_to_timestamp(ms_str: str):
+    ms = int(ms_str)
+    return f'{datetime.timedelta(seconds=ms//1000)}.{ms % 1000:03d}'
 
 
-def timestamp_to_ms(timestamp : str):
+def timestamp_to_ms(timestamp: str):
     '''acceptable timestamp format: [00:]00:00[.000]'''
     if timestamp.count(':') == 1:
         timestamp = f'00:{timestamp}'
@@ -35,18 +35,17 @@ def timestamp_to_ms(timestamp : str):
     ms = ms.ljust(3, '0')[:3]
     return str(1000*(int(h) * 3600 + int(m) * 60 + int(s)) + int(ms))
 
-def load_file_content(filename):
-        # Detect file encoding
-        with open(filename, 'rb') as file:
-            raw = file.read()
-            encoding = chardet.detect(raw)['encoding']
+def load_file_content(filename: str):
+    # Detect file encoding
+    with open(filename, 'rb') as file:
+        raw = file.read()
+        encoding = chardet.detect(raw)['encoding']
 
-        # Detect format of input file
-        with open(filename, encoding=encoding) as f:
-            return f.readlines()
+    # Detect format of input file
+    with open(filename, encoding=encoding) as f:
+        return f.readlines()
 
-def main(*paras):
-
+def args_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs='?', help="input filename")
     parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab','xml'], help="output format (default: pot)")
@@ -54,26 +53,25 @@ def main(*paras):
     parser.add_argument("--charset", help="output file charset (default: utf-8-sig)", default='utf-8-sig')
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
     parser.add_argument('-c', '--clipboard', action='store_true', help='automatically process text in clipboard and save it back.')
+    return parser
+
+def main(*paras):
+    parser = args_parser()
     if paras:
         paras = list(map(str, paras))
         args = parser.parse_args(paras)
     else:
         args = parser.parse_args()
 
-    # Input handling
+    # Input handling, get lines
     if args.filename and exists(args.filename):
-        if args.filename.lower().endswith('.xml'):
+        lower_ext = splitext(args.filename)[1].lower()
+        if lower_ext == '.xml':
             run(['mkvmerge', '-o', 'temp.mks', '--chapters', args.filename])
-            run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
-            lines = load_file_content('temp.ogm.txt')
-            remove('temp.mks')
-            remove('temp.ogm.txt')
-        elif args.filename.lower().split('.')[-1] in ['mp4','mkv']:
+            lines = extract_and_read_chapters()
+        elif lower_ext in ['.mp4', '.mkv']:
             run(['mkvmerge', '-o', 'temp.mks', '-A', '-D', '--chapter-charset', args.mp4_charset, args.filename])
-            run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
-            lines = load_file_content('temp.ogm.txt')
-            remove('temp.mks')
-            remove('temp.ogm.txt')
+            lines = extract_and_read_chapters()
         else:
             lines = load_file_content(args.filename)
     elif args.clipboard:
@@ -88,9 +86,10 @@ def main(*paras):
     else:
         print('Input file missing or invalid!')
         return 0
+    # Strip every line and remove empty lines
+    lines = [line.strip() for line in lines if line.strip()]
 
-    # Remove empty lines
-    lines = list(filter(lambda x: not re.match(r'^\s*$', x), lines))
+    # Detect input format
     input_format = ''
     SIMPLE_RE = r"([0-9:.]+?), *(.+)"
     TAB_RE = r"([0-9:.].+?)\t(.+)"
@@ -103,14 +102,13 @@ def main(*paras):
         input_format = 'ogm'
     elif lines[0].startswith('[Bookmark]'):
         input_format = 'pot'
-    elif lines[0].startswith('Menu'):
-        if re.match(MEDIAINFO_RE, lines[1]):
-            lines = lines[1:]
-            input_format = 'mediainfo'
+    elif lines[0].startswith('Menu') and re.match(MEDIAINFO_RE, lines[1]):
+        lines = lines[1:]
+        input_format = 'mediainfo'
     elif re.match(MEDIAINFO_RE, lines[0]):
         input_format = 'mediainfo'
     if not input_format:
-        print('Can\'t guess file format!')
+        print("Can't guess file format!")
         return 0
 
     # Input text parsing
@@ -119,102 +117,106 @@ def main(*paras):
         for line in lines:
             m = re.match(SIMPLE_RE, line)
             if m:
-                chapters.append((m.group(1), m.group(2)))
+                chapters.append((m[1], m[2]))
     elif input_format == 'tab':
         for line in lines:
             m = re.match(TAB_RE, line)
             if m:
-                chapters.append((m.group(1), m.group(2)))
+                chapters.append((m[1], m[2]))
     elif input_format == 'ogm':
-        for i in range(0, len(lines), 2):
-            line1 = lines[i].strip()  # Remove \n at the end
-            line2 = lines[i+1].strip()
-            chapters.append(
-                (line1[line1.index('=')+1:], line2[line2.index('=')+1:]))
+        chapters = [
+            (lines[i].split('=')[1], lines[i + 1].split('=')[1])
+            for i in range(0, len(lines), 2)
+        ]
     elif input_format == 'pot':
         for line in lines[1:]:
-            m = re.match(r'\d+=(\d+)\*([^*]+)', line.strip())
+            m = re.match(r'\d+=(\d+)\*([^*]+)', line)
             if m:
-                timestamp = ms_to_timestamp(m.group(1))
-                chapters.append((timestamp, m.group(2)))
+                timestamp = ms_to_timestamp(m[1])
+                chapters.append((timestamp, m[2]))
     elif input_format == 'mediainfo':
         for line in lines:
             m = re.match(MEDIAINFO_RE, line)
             if m:
-                chapters.append((m.group(1), m.group(2)))
+                chapters.append((m[1], m[2]))
 
     # Set default output format if not specified.
     if not args.format:
         args.format = 'pot' # Default to pot
         if args.clipboard and input_format != 'tab':
             args.format = 'tab' # Default to "tab" if get from clipboard for spreadsheet editing.
-        if args.output: # Get output format from output filename, if speicified.
-            ext = splitext(args.output)[-1]
-            if ext.lower() == '.pbf':
+        if args.output: # Get output format from output filename, if specified.
+            lower_ext = splitext(args.output)[-1].lower()
+            if lower_ext == '.pbf':
                 args.format = 'pot'
-            elif ext.lower() == '.xml':
+            elif lower_ext == '.xml':
                 args.format = 'xml'
-            elif ext.lower() == '.txt':
+            elif lower_ext == '.txt':
                 args.format = 'ogm'
-
-    # Output filename handling
-    if args.clipboard and not args.output:
-        pass
-    else:
-        if args.output:
-            new_filename = args.output
-            args.clipboard = False
-        else:
-            if args.format == 'pot':
-                new_filename = f'{splitext(args.filename)[0]}.pbf'
-            elif args.format == 'xml':
-                new_filename = f'{splitext(args.filename)[0]}.xml'
-            else:
-                new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
-        # Ensure to not override existing file(s)
-        i = 2
-        stem = splitext(new_filename)[0]
-        ext = splitext(new_filename)[1]
-        while exists(new_filename):
-            new_filename = f'{stem} ({i}){ext}'
-            i += 1
 
     # Genreate output text
     output = ''
     if args.format == 'tab':
         for time, title in chapters:
-            output = output + f'{time}\t{title}\n'
+            output += f'{time}\t{title}\n'
     elif args.format == 'simple':
         for time, title in chapters:
-            output = output + f'{time},{title}\n'
+            output += f'{time},{title}\n'
     elif args.format in ['ogm','xml']:
-        i = 1
-        for time, title in chapters:
-            output = output + f'CHAPTER{i:02}={time}\n'
-            output = output + f'CHAPTER{i:02}NAME={title}\n'
-            i += 1
+        for i, (time, title) in enumerate(chapters, start=1):
+            output += f'CHAPTER{i:02}={time}\n'
+            output += f'CHAPTER{i:02}NAME={title}\n'
     elif args.format == 'pot':
-        i = 0
-        output = output + '[Bookmark]\n'
-        for time, title in chapters:
-            output = output + f'{i}={timestamp_to_ms(time)}*{title}*\n'
-            i += 1
+        output +='[Bookmark]\n'
+        for i, (time, title) in enumerate(chapters):
+            output += f'{i}={timestamp_to_ms(time)}*{title}*\n'
 
     # Output to clipboard/file
     if args.clipboard:
         print('Set data to clipboard:')
         print(output)
         set_clipboard_data(output.replace('\n','\r\n'))
+    # Output to file iff output filename is specified or not clipboard mode.
+    if args.output or not args.clipboard:
+        new_filename = get_output_filename(args)
+        print(f'Write to file: {new_filename}')
+        if args.format == 'xml':
+            with open('temp.ogm.txt', 'w', encoding=args.charset) as f:
+                f.write(output)
+            run(['mkvmerge', '-o', 'temp.mks', '--chapters', 'temp.ogm.txt'])
+            run(['mkvextract', 'temp.mks', 'chapters', new_filename])
+            remove('temp.mks')
+            remove('temp.ogm.txt')
+        else:
+            with open(new_filename, 'w', encoding=args.charset) as f:
+                f.write(output)
+
+
+def extract_and_read_chapters():
+    run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
+    result = load_file_content('temp.ogm.txt')
+    remove('temp.mks')
+    remove('temp.ogm.txt')
+    return result
+
+def get_output_filename(args: argparse.Namespace):
+    if args.output:
+        new_filename = args.output
+        assert isinstance(new_filename, str) # For type checking
+    elif args.format == 'pot':
+        new_filename = f'{splitext(args.filename)[0]}.pbf'
     elif args.format == 'xml':
-        with open('temp.ogm.txt', 'w', encoding=args.charset) as f:
-            f.write(output)
-        run(['mkvmerge', '-o', 'temp.mks', '--chapters', 'temp.ogm.txt'])
-        run(['mkvextract', 'temp.mks', 'chapters', new_filename])
-        remove('temp.mks')
-        remove('temp.ogm.txt')
+        new_filename = f'{splitext(args.filename)[0]}.xml'
     else:
-        with open(new_filename, 'w', encoding=args.charset) as f:
-            f.write(output)
+        new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
+    # Ensure to not override existing file(s)
+    i = 2
+    stem = splitext(new_filename)[0]
+    ext = splitext(new_filename)[1]
+    while exists(new_filename):
+        new_filename = f'{stem} ({i}){ext}'
+        i += 1
+    return new_filename
 
 
 if __name__ == '__main__':
