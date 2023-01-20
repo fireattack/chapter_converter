@@ -8,17 +8,20 @@ from os import remove
 import chardet
 import win32clipboard
 
+
 def get_clipboard_data():
     win32clipboard.OpenClipboard()
     data = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
     win32clipboard.CloseClipboard()
     return data
 
+
 def set_clipboard_data(data: str):
     win32clipboard.OpenClipboard()
     win32clipboard.EmptyClipboard()
     win32clipboard.SetClipboardText(data, win32clipboard.CF_UNICODETEXT)
     win32clipboard.CloseClipboard()
+
 
 def ms_to_timestamp(ms_str: str):
     ms = int(ms_str)
@@ -33,7 +36,8 @@ def timestamp_to_ms(timestamp: str):
         timestamp += '.000'
     h, m, s, ms = re.split('[:.]', timestamp)
     ms = ms.ljust(3, '0')[:3]
-    return str(1000*(int(h) * 3600 + int(m) * 60 + int(s)) + int(ms))
+    return str(1000 * (int(h) * 3600 + int(m) * 60 + int(s)) + int(ms))
+
 
 def load_file_content(filename: str):
     # Detect file encoding
@@ -45,15 +49,17 @@ def load_file_content(filename: str):
     with open(filename, encoding=encoding) as f:
         return f.readlines()
 
+
 def args_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs='?', help="input filename")
-    parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab','xml'], help="output format (default: pot)")
-    parser.add_argument("--mp4-charset", help="input chapter charset for mp4 file, since it can't be auto detected (default: utf-8)", default='utf-8')
-    parser.add_argument("--charset", help="output file charset (default: utf-8-sig)", default='utf-8-sig')
+    parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab', 'xml'], help="output format (default: pot)")
+    parser.add_argument("--mp4-charset", default='utf-8', help="input chapter charset for mp4 file, since it can't be auto detected (default: utf-8)")
+    parser.add_argument("--charset", default='utf-8-sig', help="output file charset (default: utf-8-sig)")
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
     parser.add_argument('-c', '--clipboard', action='store_true', help='automatically process text in clipboard and save it back.')
     return parser
+
 
 def main(*paras):
     parser = args_parser()
@@ -124,10 +130,8 @@ def main(*paras):
             if m:
                 chapters.append((m[1], m[2]))
     elif input_format == 'ogm':
-        chapters = [
-            (lines[i].split('=')[1], lines[i + 1].split('=')[1])
-            for i in range(0, len(lines), 2)
-        ]
+        chapters = [(lines[i].split('=')[1], lines[i + 1].split('=')[1])
+                    for i in range(0, len(lines), 2)]
     elif input_format == 'pot':
         for line in lines[1:]:
             m = re.match(r'\d+=(\d+)\*([^*]+)', line)
@@ -162,12 +166,12 @@ def main(*paras):
     elif args.format == 'simple':
         for time, title in chapters:
             output += f'{time},{title}\n'
-    elif args.format in ['ogm','xml']:
+    elif args.format in ['ogm', 'xml']:
         for i, (time, title) in enumerate(chapters, start=1):
             output += f'CHAPTER{i:02}={time}\n'
             output += f'CHAPTER{i:02}NAME={title}\n'
     elif args.format == 'pot':
-        output +='[Bookmark]\n'
+        output += '[Bookmark]\n'
         for i, (time, title) in enumerate(chapters):
             output += f'{i}={timestamp_to_ms(time)}*{title}*\n'
 
@@ -175,7 +179,7 @@ def main(*paras):
     if args.clipboard:
         print('Set data to clipboard:')
         print(output)
-        set_clipboard_data(output.replace('\n','\r\n'))
+        set_clipboard_data(output.replace('\n', '\r\n'))
     # Output to file iff output filename is specified or not clipboard mode.
     if args.output or not args.clipboard:
         new_filename = get_output_filename(args)
@@ -198,6 +202,7 @@ def extract_and_read_chapters():
     remove('temp.mks')
     remove('temp.ogm.txt')
     return result
+
 
 def get_output_filename(args: argparse.Namespace):
     if args.output:
