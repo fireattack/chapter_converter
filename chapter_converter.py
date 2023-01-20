@@ -44,7 +44,6 @@ def load_file_content(filename: str):
     with open(filename, 'rb') as file:
         raw = file.read()
         encoding = chardet.detect(raw)['encoding']
-
     # Detect format of input file
     with open(filename, encoding=encoding) as f:
         return f.readlines()
@@ -180,7 +179,7 @@ def main(*paras):
             elif lower_ext == '.txt':
                 args.format = 'ogm'
 
-    # Genreate output text
+    # Generate output text
     output = ''
     if args.format == 'tab':
         for time, title in chapters:
