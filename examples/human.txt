@@ -1,0 +1,9 @@
+17:02No delimiter
+42:19 One space
+58:10  Two spaces
+1:11:00.942	A tab
+1:42:10.255	  	 Mixed tabs and spaces
+1:46:02,comma (must be immediately after timestamp)
+1:50:32.40,    comma+trailing spaces
+2:30:41.155,,Supports names with leading comma
+2:35:11.696 ,Supports names with leading comma
