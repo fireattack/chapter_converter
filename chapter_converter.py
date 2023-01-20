@@ -97,13 +97,10 @@ def main(*paras):
 
     # Detect input format
     input_format = ''
-    SIMPLE_RE = r"([0-9:.]+?), *(.+)"
-    TAB_RE = r"([0-9:.].+?)\t(.+)"
     MEDIAINFO_RE = r"([0-9:.]+?)\s+:\s[a-z]{0,2}:(.+)"
-    if re.match(SIMPLE_RE, lines[0]):
-        input_format = 'simple'
-    elif re.match(TAB_RE, lines[0]):
-        input_format = 'tab'
+    HUMAN_RE = r"(?P<time>[0-9]+:[0-9]{1,2}[0-9:.]*)([\s,]+(?P<name1>.+)|(?P<name2>[^\d:.\s,].+))"  # only one of name1 and name2 will be matched
+    if re.match(HUMAN_RE, lines[0]):
+        input_format = 'human'
     elif re.match(r"CHAPTER\d", lines[0]):
         input_format = 'ogm'
     elif lines[0].startswith('[Bookmark]'):
@@ -119,16 +116,13 @@ def main(*paras):
 
     # Input text parsing
     chapters = []
-    if input_format == 'simple':
+    if input_format == 'human':
         for line in lines:
-            m = re.match(SIMPLE_RE, line)
+            m = re.match(HUMAN_RE, line)
             if m:
-                chapters.append((m[1], m[2]))
-    elif input_format == 'tab':
-        for line in lines:
-            m = re.match(TAB_RE, line)
-            if m:
-                chapters.append((m[1], m[2]))
+                timestamp = ms_to_timestamp(timestamp_to_ms(m['time'])) # normalize timestamp
+                name = m['name1'] or m['name2']
+                chapters.append((timestamp, name))
     elif input_format == 'ogm':
         chapters = [(lines[i].split('=')[1], lines[i + 1].split('=')[1])
                     for i in range(0, len(lines), 2)]
