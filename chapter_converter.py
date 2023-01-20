@@ -1,9 +1,9 @@
-from subprocess import run
 import argparse
 import datetime
 import re
-from os.path import exists, splitext
 from os import remove
+from os.path import exists, splitext
+from subprocess import run
 
 import chardet
 import win32clipboard
@@ -48,6 +48,34 @@ def load_file_content(filename: str):
     # Detect format of input file
     with open(filename, encoding=encoding) as f:
         return f.readlines()
+
+
+def extract_and_read_chapters():
+    run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
+    result = load_file_content('temp.ogm.txt')
+    remove('temp.mks')
+    remove('temp.ogm.txt')
+    return result
+
+
+def get_output_filename(args: argparse.Namespace):
+    if args.output:
+        new_filename = args.output
+        assert isinstance(new_filename, str) # For type checking
+    elif args.format == 'pot':
+        new_filename = f'{splitext(args.filename)[0]}.pbf'
+    elif args.format == 'xml':
+        new_filename = f'{splitext(args.filename)[0]}.xml'
+    else:
+        new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
+    # Ensure to not override existing file(s)
+    i = 2
+    stem = splitext(new_filename)[0]
+    ext = splitext(new_filename)[1]
+    while exists(new_filename):
+        new_filename = f'{stem} ({i}){ext}'
+        i += 1
+    return new_filename
 
 
 def args_parser():
@@ -98,7 +126,7 @@ def main(*paras):
     # Detect input format
     input_format = ''
     MEDIAINFO_RE = r"([0-9:.]+?)\s+:\s[a-z]{0,2}:(.+)"
-    HUMAN_RE = r"(?P<time>[0-9]+:[0-9]{1,2}[0-9:.]*)([\s,]+(?P<name1>.+)|(?P<name2>[^\d:.\s,].+))"  # only one of name1 and name2 will be matched
+    HUMAN_RE = r"(?P<time>\d+:\d{1,2}[0-9:.]*)(\s*,\s*|\s+)(?P<name>.+)"
     if re.match(HUMAN_RE, lines[0]):
         input_format = 'human'
     elif re.match(r"CHAPTER\d", lines[0]):
@@ -121,7 +149,7 @@ def main(*paras):
             m = re.match(HUMAN_RE, line)
             if m:
                 timestamp = ms_to_timestamp(timestamp_to_ms(m['time'])) # normalize timestamp
-                name = m['name1'] or m['name2']
+                name = m['name']
                 chapters.append((timestamp, name))
     elif input_format == 'ogm':
         chapters = [(lines[i].split('=')[1], lines[i + 1].split('=')[1])
@@ -141,8 +169,8 @@ def main(*paras):
     # Set default output format if not specified.
     if not args.format:
         args.format = 'pot' # Default to pot
-        if args.clipboard and input_format != 'tab':
-            args.format = 'tab' # Default to "tab" if get from clipboard for spreadsheet editing.
+        if args.clipboard:
+            args.format = 'tab' # Default to "tab" if getting from clipboard for spreadsheet editing.
         if args.output: # Get output format from output filename, if specified.
             lower_ext = splitext(args.output)[-1].lower()
             if lower_ext == '.pbf':
@@ -169,13 +197,13 @@ def main(*paras):
         for i, (time, title) in enumerate(chapters):
             output += f'{i}={timestamp_to_ms(time)}*{title}*\n'
 
-    # Output to clipboard/file
-    if args.clipboard:
+    # Output to clipboard if no output is specified
+    if args.clipboard and not args.output:
         print('Set data to clipboard:')
         print(output)
         set_clipboard_data(output.replace('\n', '\r\n'))
     # Output to file iff output filename is specified or not clipboard mode.
-    if args.output or not args.clipboard:
+    else:
         new_filename = get_output_filename(args)
         print(f'Write to file: {new_filename}')
         if args.format == 'xml':
@@ -188,34 +216,6 @@ def main(*paras):
         else:
             with open(new_filename, 'w', encoding=args.charset) as f:
                 f.write(output)
-
-
-def extract_and_read_chapters():
-    run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
-    result = load_file_content('temp.ogm.txt')
-    remove('temp.mks')
-    remove('temp.ogm.txt')
-    return result
-
-
-def get_output_filename(args: argparse.Namespace):
-    if args.output:
-        new_filename = args.output
-        assert isinstance(new_filename, str) # For type checking
-    elif args.format == 'pot':
-        new_filename = f'{splitext(args.filename)[0]}.pbf'
-    elif args.format == 'xml':
-        new_filename = f'{splitext(args.filename)[0]}.xml'
-    else:
-        new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
-    # Ensure to not override existing file(s)
-    i = 2
-    stem = splitext(new_filename)[0]
-    ext = splitext(new_filename)[1]
-    while exists(new_filename):
-        new_filename = f'{stem} ({i}){ext}'
-        i += 1
-    return new_filename
 
 
 if __name__ == '__main__':
