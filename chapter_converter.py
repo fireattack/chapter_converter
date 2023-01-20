@@ -125,7 +125,7 @@ def main(*paras):
     # Detect input format
     input_format = ''
     MEDIAINFO_RE = r"([0-9:.]+?)\s+:\s[a-z]{0,2}:(.+)"
-    HUMAN_RE = r"(?P<time>\d+:\d{1,2}[0-9:.]*)(\s*,\s*|\s+)(?P<name>.+)"
+    HUMAN_RE = r"(?P<time>\d+:\d{1,2}[0-9:.]*)(,?\s*)(?P<name>.+)"
     if re.match(HUMAN_RE, lines[0]):
         input_format = 'human'
     elif re.match(r"CHAPTER\d", lines[0]):
