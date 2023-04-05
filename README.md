@@ -147,7 +147,7 @@ XML chapter format defined by [Matroska specification](https://matroska.org/tech
 
 A format PotPlayer uses for its bookmarks. If you put the file together with the video file (same name except extension, just like any external resources), it will be recognized by PotPlayer just like internal chapters - you can use "H" to view and select, and they will show up as markers on navigation bar too:
 
-![Pot Bookmark Example](img/pot.png)
+![Pot Bookmark Example](https://raw.githubusercontent.com/fireattack/chapter_converter/master/img/pot.png)
 
 It is not ideal, but it's the closest thing to "external chapter file" to my knowledge.
 
