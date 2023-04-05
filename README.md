@@ -42,7 +42,9 @@ options:
   -c, --clipboard       automatically process text in clipboard and save it back.
 ```
 
-A simple GUI is provided as-is by running `chapgui`. You need to install module `gooey` in `pip` manually to make it work. See [my comments](https://github.com/fireattack/chapter_converter/pull/4#issuecomment-1359129224) for some caveats.
+If you prefer a single file than a package, you can just download `chapter_converter.py` in `chapter_converter/` and use it directly (`chapter_converter.py -h`).
+
+A simple GUI is also provided as-is by running `chapgui`. You need to install module `gooey` in `pip` manually to make it work. See [my comments](https://github.com/fireattack/chapter_converter/pull/4#issuecomment-1359129224) for some caveats.
 
 As a Python module:
 
