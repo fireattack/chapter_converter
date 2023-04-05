@@ -1,3 +1,5 @@
+[![PyPI Version](https://img.shields.io/pypi/v/chapter-converter.svg)](https://pypi.python.org/pypi/chapter-converter)
+
 # chapter_converter
 Convert between several different video chapter file formats with ease.
 
@@ -8,15 +10,27 @@ Convert between several different video chapter file formats with ease.
 * Can specify output format and filename
 * Clipboard support (input and output) for editing purposes
 
-## Usage
+## Install
 
 ```
-usage: chapter_converter.py [-h] [-f {simple,pot,ogm,tab,xml}] [--mp4-charset MP4_CHARSET] [--charset CHARSET] [-o OUTPUT] [-c] [filename]
+pip install -U chapter_converter
+```
+or from source:
+```
+pip install -U git+https://github.com/fireattack/chapter_converter
+```
+
+## Usage
+
+CLI script is named `chap`. Or you can use `python -m chapter_converter`.
+
+```
+usage: chap [-h] [-f {simple,pot,ogm,tab,xml}] [--mp4-charset MP4_CHARSET] [--charset CHARSET] [-o OUTPUT] [-c] [filename]
 
 positional arguments:
   filename              input filename
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -f {simple,pot,ogm,tab,xml}, --format {simple,pot,ogm,tab,xml}
                         output format (default: pot)
@@ -28,14 +42,14 @@ optional arguments:
   -c, --clipboard       automatically process text in clipboard and save it back.
 ```
 
-Note: A simple GUI is provided by running `gui.py`. You need to install module `gooey` in `pip` separately to make it work. See https://github.com/fireattack/chapter_converter/pull/4#issuecomment-1359129224 for some caveats.
+A simple GUI is provided as-is by running `chapgui`. You need to install module `gooey` in `pip` manually to make it work. See [my comments](https://github.com/fireattack/chapter_converter/pull/4#issuecomment-1359129224) for some caveats.
 
 As a Python module:
 
 ```python
-from chapter_converter import main
+from chapter_converter import chapter_converter
 
-main('input.pbf', '-o', 'output.xml')
+chapter_converter.main('input.pbf', '-o', 'output.xml')
 ```
 
 ### Note
@@ -46,7 +60,7 @@ main('input.pbf', '-o', 'output.xml')
 
 ## Supported formats
 
-See also: example files in `examples`.
+See also: example files in `examples/`.
 
 ### MKV and MP4 video containers (inputs only)
 
