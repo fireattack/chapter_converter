@@ -4,4 +4,4 @@ pyperclip
 # If you want to use GUI, install:
 # attrdict3
 # Gooey
-# in two separate transctions with PIP.
+# in two separate transactions with PIP.
