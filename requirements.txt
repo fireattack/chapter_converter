@@ -1,5 +1,5 @@
 chardet
-pywin32
+pyperclip
 
 # If you want to use GUI, install:
 # attrdict3

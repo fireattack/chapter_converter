@@ -6,21 +6,15 @@ from os.path import exists, splitext
 from subprocess import run
 
 import chardet
-import win32clipboard
+import pyperclip
 
 
 def get_clipboard_data():
-    win32clipboard.OpenClipboard()
-    data = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
-    win32clipboard.CloseClipboard()
-    return data
+    return pyperclip.paste()
 
 
 def set_clipboard_data(data: str):
-    win32clipboard.OpenClipboard()
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardText(data, win32clipboard.CF_UNICODETEXT)
-    win32clipboard.CloseClipboard()
+    pyperclip.copy(data)
 
 
 def ms_to_timestamp(ms_str: str):
