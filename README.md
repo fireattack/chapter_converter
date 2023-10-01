@@ -5,14 +5,15 @@ Convert between several different video chapter file formats with ease.
 
 ## Features
 
-* Auto input format detection: including chapter files and video files with chapters (`.mkv` and `.mp4`. Requires `mkvtoolnix` binaries in path).
+* Auto input format detection: including various chapter files and video files with chapters (`.mkv` and `.mp4`)
 * Auto input encoding detection
 * Can specify output format and filename
 * Clipboard support (input and output) for editing purposes
 
 ## Prerequisites
 
-- System package [mkvtoolnix-cli](https://repology.org/project/mkvtoolnix/versions) to get the binary `mkvextract` and `mkvmerge`
+- [MKVToolNix](https://mkvtoolnix.download/) binaries `mkvextract` and `mkvmerge`. You can download it via
+  - Official website: https://mkvtoolnix.download/downloads.html
   - Arch Linux `pacman -S mkvtoolnix-cli`
   - Debian / Ubuntu `apt install mkvtoolnix`
   - openSUSE / SLES `zypper in mkvtoolnix`
@@ -128,7 +129,7 @@ CHAPTER03=0:58:10.114
 ...
 ```
 
-### MediaInfo format (`mediainfo`)
+### MediaInfo format (inputs only)
 
 The way [MediaInfo](https://mediaarea.net/en/MediaInfo) presents chapter information in text form. Input only. Supports both with or without the "Menu" line.
 
