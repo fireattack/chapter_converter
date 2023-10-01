@@ -74,7 +74,7 @@ def get_output_filename(args: argparse.Namespace):
 def args_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs='?', help="input filename")
-    parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab', 'xml'], help="output format (default: pot)")
+    parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab', 'xml', 'mediainfo'], help="output format (default: pot)")
     parser.add_argument("--mp4-charset", default='utf-8', help="input chapter charset for mp4 file, since it can't be auto detected (default: utf-8)")
     parser.add_argument("--charset", default='utf-8-sig', help="output file charset (default: utf-8-sig)")
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
