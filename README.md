@@ -10,6 +10,13 @@ Convert between several different video chapter file formats with ease.
 * Can specify output format and filename
 * Clipboard support (input and output) for editing purposes
 
+## Prerequisites
+
+- System package [mkvtoolnix-cli](https://repology.org/project/mkvtoolnix/versions) to get the binary `mkvextract` and `mkvmerge`
+  - Arch Linux `pacman -S mkvtoolnix-cli`
+  - Debian / Ubuntu `apt install mkvtoolnix`
+  - openSUSE / SLES `zypper in mkvtoolnix`
+
 ## Install
 
 ```
