@@ -1,13 +1,25 @@
 import argparse
 import datetime
 import re
-from os import remove
-from os.path import exists, splitext
 from subprocess import run
+from pathlib import Path
+
 
 import chardet
 import pyperclip
 
+
+def ensure_nonexist(f):
+    f = Path(f)
+    i = 2
+    stem = f.stem
+    if m:= re.search(r'^(.+?)_(\d)$', stem):
+        stem = m[1]
+        i = int(m[2]) + 1
+    while f.exists():
+        f = f.with_name(f'{stem}_{i}{f.suffix}')
+        i = i + 1
+    return f
 
 def get_clipboard_data():
     return pyperclip.paste()
@@ -33,42 +45,38 @@ def timestamp_to_ms(timestamp: str):
     return str(1000 * (int(h) * 3600 + int(m) * 60 + int(s)) + int(ms))
 
 
-def load_file_content(filename: str):
+def load_file_content(filename):
+    filename = Path(filename)
     # Detect file encoding
-    with open(filename, 'rb') as file:
+    with filename.open('rb') as file:
         raw = file.read()
         encoding = chardet.detect(raw)['encoding']
     # Detect format of input file
-    with open(filename, encoding=encoding) as f:
+    with filename.open('r', encoding=encoding) as f:
         return f.readlines()
 
 
-def extract_and_read_chapters():
-    run(['mkvextract', 'temp.mks', 'chapters', '-s', 'temp.ogm.txt'])
-    result = load_file_content('temp.ogm.txt')
-    remove('temp.mks')
-    remove('temp.ogm.txt')
+def extract_and_read_chapters(mks_file):
+    temp_ogm_txt = ensure_nonexist('temp.ogm.txt')
+    run(['mkvextract', mks_file, 'chapters', '--simple', temp_ogm_txt])
+    result = load_file_content(temp_ogm_txt)
+    mks_file.unlink()
+    temp_ogm_txt.unlink()
     return result
 
 
-def get_output_filename(args: argparse.Namespace):
+def get_output_file(args: argparse.Namespace):
     if args.output:
-        new_filename = args.output
-        assert isinstance(new_filename, str) # For type checking
-    elif args.format == 'pot':
-        new_filename = f'{splitext(args.filename)[0]}.pbf'
-    elif args.format == 'xml':
-        new_filename = f'{splitext(args.filename)[0]}.xml'
+        output_file = Path(args.output)
     else:
-        new_filename = f'{splitext(args.filename)[0]}.{args.format}.txt'
-    # Ensure to not override existing file(s)
-    i = 2
-    stem = splitext(new_filename)[0]
-    ext = splitext(new_filename)[1]
-    while exists(new_filename):
-        new_filename = f'{stem} ({i}){ext}'
-        i += 1
-    return new_filename
+        stem = Path(args.filename).stem
+        if args.format == 'pot':
+            output_file = f'{stem}.pbf'
+        elif args.format == 'xml':
+            output_file = f'{stem}.xml'
+        else:
+            output_file = f'{stem}.{args.format}.txt'
+    return ensure_nonexist(output_file)
 
 
 def args_parser():
@@ -90,15 +98,21 @@ def main(*paras):
     else:
         args = parser.parse_args()
 
-    # Input handling, get lines
-    if args.filename and exists(args.filename):
-        lower_ext = splitext(args.filename)[1].lower()
+    # Input handling
+    if args.filename:
+        f = Path(args.filename)
+        if not f.exists():
+            print('Input file not exists!')
+            return 0
+        lower_ext = f.suffix.lower()
         if lower_ext == '.xml':
-            run(['mkvmerge', '-o', 'temp.mks', '--chapters', args.filename])
-            lines = extract_and_read_chapters()
+            mks_file = ensure_nonexist('temp.mks')
+            run(['mkvmerge', '-o', mks_file, '--chapters', args.filename])
+            lines = extract_and_read_chapters(mks_file)
         elif lower_ext in ['.mp4', '.mkv']:
-            run(['mkvmerge', '-o', 'temp.mks', '-A', '-D', '--chapter-charset', args.mp4_charset, args.filename])
-            lines = extract_and_read_chapters()
+            mks_file = ensure_nonexist('temp.mks')
+            run(['mkvmerge', '-o', mks_file, '-A', '-D', '--chapter-charset', args.mp4_charset, args.filename])
+            lines = extract_and_read_chapters(mks_file)
         else:
             lines = load_file_content(args.filename)
     elif args.clipboard:
@@ -118,7 +132,7 @@ def main(*paras):
 
     # Detect input format
     input_format = ''
-    MEDIAINFO_RE = r"([0-9:.]+?)\s+:\s[a-z]{0,2}:(.+)"
+    MEDIAINFO_RE = r"([0-9:.]+?)\s+:(\s[a-z]{0,2}):(.+)"
     HUMAN_RE = r"(?P<time>\d+:\d{1,2}[0-9:.]*)(,?\s*)(?P<name>.+)"
     if re.match(HUMAN_RE, lines[0]):
         input_format = 'human'
@@ -157,7 +171,8 @@ def main(*paras):
         for line in lines:
             m = re.match(MEDIAINFO_RE, line)
             if m:
-                chapters.append((m[1], m[2]))
+                chapters.append((m[1], m[3]))
+
 
     # Set default output format if not specified.
     if not args.format:
@@ -165,7 +180,7 @@ def main(*paras):
         if args.clipboard:
             args.format = 'tab' # Default to "tab" if getting from clipboard for spreadsheet editing.
         if args.output: # Get output format from output filename, if specified.
-            lower_ext = splitext(args.output)[-1].lower()
+            lower_ext = Path(args.output).suffix.lower()
             if lower_ext == '.pbf':
                 args.format = 'pot'
             elif lower_ext == '.xml':
@@ -197,17 +212,19 @@ def main(*paras):
         set_clipboard_data(output.replace('\n', '\r\n'))
     # Output to file iff output filename is specified or not clipboard mode.
     else:
-        new_filename = get_output_filename(args)
-        print(f'Write to file: {new_filename}')
+        output_file = get_output_file(args)
+        print(f'Write to file: {output_file}')
         if args.format == 'xml':
-            with open('temp.ogm.txt', 'w', encoding=args.charset) as f:
+            temp_ogm_txt = ensure_nonexist('temp.ogm.txt')
+            temp_mks = ensure_nonexist('temp.mks')
+            with temp_ogm_txt.open('w', encoding=args.charset) as f:
                 f.write(output)
-            run(['mkvmerge', '-o', 'temp.mks', '--chapters', 'temp.ogm.txt'])
-            run(['mkvextract', 'temp.mks', 'chapters', new_filename])
-            remove('temp.mks')
-            remove('temp.ogm.txt')
+            run(['mkvmerge', '-o', temp_mks, '--chapters', temp_ogm_txt])
+            run(['mkvextract', temp_mks, 'chapters', output_file])
+            temp_mks.unlink()
+            temp_ogm_txt.unlink()
         else:
-            with open(new_filename, 'w', encoding=args.charset) as f:
+            with output_file.open('w', encoding=args.charset) as f:
                 f.write(output)
 
 
