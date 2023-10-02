@@ -69,13 +69,13 @@ def get_output_file(args: argparse.Namespace):
     if args.output:
         output_file = Path(args.output)
     else:
-        stem = Path(args.filename).stem
+        f = Path(args.filename)
         if args.format == 'pot':
-            output_file = f'{stem}.pbf'
+            output_file = f.with_suffix('.pbf')
         elif args.format == 'xml':
-            output_file = f'{stem}.xml'
+            output_file = f.with_suffix('.xml')
         else:
-            output_file = f'{stem}.{args.format}.txt'
+            output_file = f.with_suffix(f'.{args.format}.txt')
     if args.yes:
         if output_file.exists():
             print(f'{output_file} already exists, will overwrite it.')
