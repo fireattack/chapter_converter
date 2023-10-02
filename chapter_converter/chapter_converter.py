@@ -84,9 +84,10 @@ def args_parser():
     parser.add_argument("filename", nargs='?', help="input filename")
     parser.add_argument("-f", "--format", choices=['simple', 'pot', 'ogm', 'tab', 'xml'], help="output format (default: pot)")
     parser.add_argument("--mp4-charset", default='utf-8', help="input chapter charset for mp4 file, since it can't be auto detected (default: utf-8)")
-    parser.add_argument("--charset", default='utf-8-sig', help="output file charset (default: utf-8-sig)")
+    parser.add_argument("--charset", default='utf-8-sig', help="output file charset. XML output will always be utf-8-sig (default: utf-8-sig)")
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
     parser.add_argument('-c', '--clipboard', action='store_true', help='automatically process text in clipboard and save it back.')
+    parser.add_argument('--lang', help='manually set language tag for XML chapter.')
     return parser
 
 
@@ -132,7 +133,7 @@ def main(*paras):
 
     # Detect input format
     input_format = ''
-    MEDIAINFO_RE = r"([0-9:.]+?)\s+:(\s[a-z]{0,2}):(.+)"
+    MEDIAINFO_RE = r"([0-9:.]+?)\s+:\s([a-z]{0,2}):(.+)"
     HUMAN_RE = r"(?P<time>\d+:\d{1,2}[0-9:.]*)(,?\s*)(?P<name>.+)"
     if re.match(HUMAN_RE, lines[0]):
         input_format = 'human'
@@ -151,6 +152,8 @@ def main(*paras):
 
     # Input text parsing
     chapters = []
+    lang_tags = []
+
     if input_format == 'human':
         for line in lines:
             m = re.match(HUMAN_RE, line)
@@ -172,7 +175,7 @@ def main(*paras):
             m = re.match(MEDIAINFO_RE, line)
             if m:
                 chapters.append((m[1], m[3]))
-
+                lang_tags.append(m[2].strip())
 
     # Set default output format if not specified.
     if not args.format:
@@ -217,9 +220,20 @@ def main(*paras):
         if args.format == 'xml':
             temp_ogm_txt = ensure_nonexist('temp.ogm.txt')
             temp_mks = ensure_nonexist('temp.mks')
-            with temp_ogm_txt.open('w', encoding=args.charset) as f:
-                f.write(output)
-            run(['mkvmerge', '-o', temp_mks, '--chapters', temp_ogm_txt])
+            temp_ogm_txt.write_text(output, encoding='utf-8') # use utf-8 for temp file
+            cmd = ['mkvmerge', '-o', temp_mks]
+            if args.lang:
+                cmd += ['--chapter-language', args.lang]
+            elif any(lang_tags):
+                # assert there is only one language tag
+                if not len(set(lang_tags)) == 1:
+                    print('Warning: Multiple language tags detected! Will only use the first one.')
+                # get first non-empty language tag
+                lang_tag = [tag for tag in lang_tags if tag][0]
+                print(f'Set language tag to {lang_tag} for XML chapter.')
+                cmd += ['--chapter-language', lang_tag]
+            cmd += ['--chapters', temp_ogm_txt]
+            run(cmd)
             run(['mkvextract', temp_mks, 'chapters', output_file])
             temp_mks.unlink()
             temp_ogm_txt.unlink()
