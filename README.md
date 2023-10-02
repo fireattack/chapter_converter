@@ -33,7 +33,7 @@ pip install -U git+https://github.com/fireattack/chapter_converter
 CLI script is named `chap`. Or you can use `python -m chapter_converter`.
 
 ```
-usage: chap [-h] [-f {simple,pot,ogm,tab,xml}] [--mp4-charset MP4_CHARSET] [--charset CHARSET] [-o OUTPUT] [-c] [filename]
+usage: chap [-h] [-f {simple,pot,ogm,tab,xml}] [--mp4-charset MP4_CHARSET] [--charset CHARSET] [-o OUTPUT] [-c] [--lang LANG] [--yes] [filename]
 
 positional arguments:
   filename              input filename
@@ -44,10 +44,12 @@ options:
                         output format (default: pot)
   --mp4-charset MP4_CHARSET
                         input chapter charset for mp4 file, since it can't be auto detected (default: utf-8)
-  --charset CHARSET     output file charset (default: utf-8-sig)
+  --charset CHARSET     output file charset. XML output will always be utf-8-sig (default: utf-8-sig)
   -o OUTPUT, --output OUTPUT
                         output filename (default: original_filename.format[.txt])
   -c, --clipboard       automatically process text in clipboard and save it back.
+  --lang LANG           manually set language tag for XML chapter.
+  --yes, -y             automatically overwrite existing file.
 ```
 
 If you prefer a single file than a package, you can just download `chapter_converter.py` in `chapter_converter/` and use it directly (`chapter_converter.py -h`).
