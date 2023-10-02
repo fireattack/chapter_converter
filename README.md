@@ -28,6 +28,16 @@ or from source:
 pip install -U git+https://github.com/fireattack/chapter_converter
 ```
 
+### Distribution packages
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/chapter-converter.svg)](https://repology.org/project/chapter-converter/versions)
+
+on ArchLinux:
+
+```
+pikaur -S chapter_converter
+```
+
 ## Usage
 
 CLI script is named `chap`. Or you can use `python -m chapter_converter`.
