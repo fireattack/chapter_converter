@@ -107,3 +107,6 @@ venv.bak/
 /img/pot.psd
 /test*
 temp.ogm.txt
+/*.txt
+/*.xml
+/*.pbf

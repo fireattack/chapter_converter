@@ -76,7 +76,12 @@ def get_output_file(args: argparse.Namespace):
             output_file = f'{stem}.xml'
         else:
             output_file = f'{stem}.{args.format}.txt'
-    return ensure_nonexist(output_file)
+    if args.yes:
+        if output_file.exists():
+            print(f'{output_file} already exists, will overwrite it.')
+        return output_file
+    else:
+        return ensure_nonexist(output_file)
 
 
 def args_parser():
@@ -88,6 +93,7 @@ def args_parser():
     parser.add_argument("-o", "--output", help="output filename (default: original_filename.format[.txt])")
     parser.add_argument('-c', '--clipboard', action='store_true', help='automatically process text in clipboard and save it back.')
     parser.add_argument('--lang', help='manually set language tag for XML chapter.')
+    parser.add_argument('--yes', '-y', action='store_true', help='automatically overwrite existing file.')
     return parser
 
 
